@@ -65,6 +65,11 @@ export const reprocess = (id) => {
   return f && enqueue(f.phone, () => processFile(id));
 };
 
+// A restart mid-read would leave files stuck on "processing"; pick them up again.
+export function resumePending() {
+  for (const { id } of all(`SELECT id FROM files WHERE status = 'processing' ORDER BY id`)) reprocess(id);
+}
+
 async function processFile(id) {
   const f = one(`SELECT * FROM files WHERE id = ?`, id);
   run(`DELETE FROM documents WHERE file_id = ?`, id);
@@ -157,7 +162,7 @@ title — a short label for an agent, e.g. "CBC report, 12 Mar 2025" or "Aadhaar
 patient_name — the person the document is about: the patient on medical papers, the holder on ID / cheque. Empty string if no name is visible.
 policyholder_name — for policy documents only: the proposer / policyholder. Otherwise empty.
 identifier — the most specific reference on the document: bill / invoice number, UHID / IP number, policy number, report or sample id. For Aadhaar, PAN and bank accounts give ONLY the last 4 characters (privacy). Empty if none.
-legible — false if the image is too blurry, dark, cropped or glared to read the key details (name, dates, amounts, results). Slightly imperfect but readable is true.
+legible — false if the image is blurry, dark, cropped or glared enough that you cannot read the key details (patient name, dates, amounts, test values, bill/policy numbers) with full confidence. If you would have to guess or infer even one key detail, it is NOT legible — the patient will simply be asked for a clearer photo. Slight tilt, shadows or creases with everything still clearly readable are fine (true).
 quality_note — if not legible, what is wrong in plain words ("photo is blurry", "bottom half is cut off"). Otherwise empty.
 belongs_to_case — "yes" when the name matches the patient on file (allow initials, spelling variants, different name order) or matches the policyholder on file. A policy that lists the patient among several insured members is "yes". "no" when a name is visible and it is clearly a different person from both the patient and the policyholder on file — this includes KYC or a cheque in someone else's name while no policyholder is on file yet (an agent will confirm). "unknown" only when no name is visible, or there is no patient name on file yet.
 relation — compare with the documents already received in this case:
@@ -182,7 +187,11 @@ async function classify(buf, mime, patient, existing) {
   const models = [...new Set([process.env.GEMINI_MODEL || 'gemini-2.5-flash', process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash-lite'])];
   const body = JSON.stringify({
     contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mime, data: buf.toString('base64') } }, { text: prompt(patient, existing) }] }],
-    generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema: SCHEMA },
+    generationConfig: {
+      temperature: 0, responseMimeType: 'application/json', responseSchema: SCHEMA,
+      // Twilio waits 15 s for the reply; model "thinking" is most of the latency. Unset = model default.
+      ...(process.env.GEMINI_THINKING_BUDGET && { thinkingConfig: { thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET) } }),
+    },
   });
   for (let round = 1; ; round++) {
     let wait = 3000 * round, last;

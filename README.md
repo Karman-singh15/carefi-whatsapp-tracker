@@ -61,7 +61,7 @@ WhatsApp ─▶ Twilio sandbox ─▶ POST /webhook/whatsapp  (signature checked
 
 - **One AI call per file.** Gemini gets the file plus the case so far: patient, policyholder, and documents already received. It returns structured JSON (a response schema), so it can judge "continuation" and "duplicate" against real context.
 - **Status rules in code, not in the prompt:** unreadable → someone else's → duplicate → not required → counted. Covered by `pipeline.test.js`.
-- **Replies are sent as TwiML in the webhook response.** Twilio trial and sandbox senders reject free-form sends through the REST API (error 21654). The webhook waits up to 11 seconds for that message's files, then answers. When several photos arrive together, only the newest webhook replies, so the patient gets one message. Set `REPLY_MODE=rest` with a paid sender to send asynchronously instead.
+- **Replies are sent as TwiML in the webhook response.** Twilio trial and sandbox senders reject free-form sends through the REST API (error 21654). The webhook answers within 13 seconds of the message arriving (Twilio waits 15) with whatever is ready. When several photos arrive together, only the newest webhook replies, so the patient gets one message. Set `REPLY_MODE=rest` with a paid sender to send asynchronously instead.
 - **Rate limits:** on a 429, the call moves to `gemini-2.5-flash-lite` (a separate free allowance), then waits as long as Google's `retryDelay` says.
 
 Stack: Node 24 (built-in `node:sqlite`), Express 5 (the only dependency), plain HTML/JS portal, Gemini API, Twilio WhatsApp.
@@ -87,6 +87,6 @@ To feed a file in without WhatsApp, while logged in:
 
 ## Known limits
 
-- **Twilio sandbox:** each tester joins once with the code. Replies only go out in response to a patient's message, so "send status" from the portal needs a paid WhatsApp sender. If a burst of photos takes longer than ~11 seconds to read, the reply says "still reading", and the next message gets the full status.
+- **Twilio sandbox:** each tester joins once with the code. Replies only go out in response to a patient's message, so "send status" from the portal needs a paid WhatsApp sender. If a burst of photos takes longer than ~13 seconds to read, the reply says "still reading", and the next message gets the full status.
 - **Render free tier:** there is no persistent disk, so a restart or redeploy clears the database and files. Use a paid disk or a server for real use.
 - **Gemini free tier:** about 10 requests a minute plus a daily cap. Use a paid key for production, which also stops Google using the data.

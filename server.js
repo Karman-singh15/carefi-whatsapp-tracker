@@ -2,7 +2,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { DATA_DIR, one, all, run } from './db.js';
-import { TYPES, checklist, ensurePatient, ingestFile, reprocess, scheduleReply, statusMessage, recordOutgoing, logIncoming, notify, onChange } from './pipeline.js';
+import { TYPES, checklist, ensurePatient, ingestFile, reprocess, resumePending, scheduleReply, statusMessage, recordOutgoing, logIncoming, notify, onChange } from './pipeline.js';
 
 const app = express();
 app.set('trust proxy', true);
@@ -69,6 +69,7 @@ let hookSeq = 0;
 const xml = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 app.post('/webhook/whatsapp', express.urlencoded({ extended: false }), async (req, res) => {
+  const started = Date.now();
   if (!validTwilio(req)) { console.warn('rejected webhook: bad signature'); return res.status(403).end(); }
   const empty = () => res.type('text/xml').send('<Response/>');
   const b = req.body, phone = String(b.From || '').replace(/^whatsapp:/, '');
@@ -89,8 +90,8 @@ app.post('/webhook/whatsapp', express.urlencoded({ extended: false }), async (re
   }
   if (!TWIML) return n || scheduleReply(phone, 1000);
 
-  // Twilio gives up after 15 s; wait up to 11 s for this message's files, then answer with the status.
-  await Promise.race([Promise.all(jobs), new Promise((r) => setTimeout(r, 11000))]);
+  // Twilio gives up 15 s after sending; answer by 13 s from arrival with whatever is ready.
+  await Promise.race([Promise.all(jobs), new Promise((r) => setTimeout(r, Math.max(0, 13000 - (Date.now() - started))))]);
   if (latestHook.get(phone) !== me) return empty(); // a newer message from this patient will answer
   latestHook.delete(phone);
   const busy = one(`SELECT count(*) n FROM files WHERE phone = ? AND status = 'processing'`, phone).n;
@@ -215,4 +216,4 @@ app.get('/api/events', (req, res) => {
 if (process.env.RENDER_EXTERNAL_URL) setInterval(() => fetch(`${process.env.RENDER_EXTERNAL_URL}/health`).catch(() => {}), 10 * 60e3);
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`portal on http://localhost:${port}`));
+app.listen(port, () => { console.log(`portal on http://localhost:${port}`); resumePending(); });
