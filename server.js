@@ -210,5 +210,9 @@ app.get('/api/events', (req, res) => {
   req.on('close', () => { off(); clearInterval(ping); });
 });
 
+// Render's free tier sleeps after 15 idle minutes and Twilio won't wait for a cold start; keep ourselves awake.
+// ponytail: free-tier workaround, drop on a paid / always-on host. RENDER_EXTERNAL_URL is set by Render.
+if (process.env.RENDER_EXTERNAL_URL) setInterval(() => fetch(`${process.env.RENDER_EXTERNAL_URL}/health`).catch(() => {}), 10 * 60e3);
+
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => console.log(`portal on http://localhost:${port}`));

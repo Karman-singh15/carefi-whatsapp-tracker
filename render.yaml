@@ -1,0 +1,27 @@
+# Render Blueprint: New -> Blueprint -> pick this repo. Secrets marked sync:false are asked for in the dashboard.
+services:
+  - type: web
+    name: carefi-whatsapp-tracker
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: REPLY_MODE
+        value: twiml
+      - key: TWILIO_WHATSAPP_FROM
+        value: "+14155238886"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: AGENTS
+        sync: false
