@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claim Docs</title>
+<style>
+  :root {
+    --bg:#f4f5f7; --card:#fff; --ink:#14171f; --muted:#667085; --line:#e4e7ec; --soft:#f9fafb;
+    --brand:#0f766e; --ok:#067647; --ok-bg:#ecfdf3; --miss:#b42318; --miss-bg:#fef3f2;
+    --warn:#b54708; --warn-bg:#fffaeb; --info:#475467; --info-bg:#f2f4f7;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color:var(--brand); text-decoration:none; } a:hover { text-decoration:underline; }
+  button, select, input { font:inherit; }
+  .btn { border:1px solid var(--line); background:var(--card); border-radius:8px; padding:6px 12px; cursor:pointer; color:var(--ink); }
+  .btn:hover { background:var(--soft); }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn.sm { padding:3px 9px; font-size:13px; }
+  header { position:sticky; top:0; z-index:5; background:var(--card); border-bottom:1px solid var(--line); }
+  .bar { max-width:1200px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px; }
+  .brand { font-weight:700; font-size:16px; color:var(--ink); }
+  .live { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .live i { width:8px; height:8px; border-radius:50%; background:#98a2b3; }
+  .live.on i { background:#17b26a; box-shadow:0 0 0 3px #17b26a33; }
+  .grow { flex:1; }
+  main { max-width:1200px; margin:0 auto; padding:20px 16px 60px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:12px; margin-bottom:16px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .stat b { display:block; font-size:24px; } .stat span { color:var(--muted); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  .card > h2 { font-size:14px; margin:0; padding:12px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px; }
+  .card > h2 .count { color:var(--muted); font-weight:500; }
+  .tools { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+  .tools input { flex:1; max-width:360px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:600; padding:10px 16px; border-bottom:1px solid var(--line); }
+  td { padding:12px 16px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tr.row { cursor:pointer; } tr.row:hover td { background:var(--soft); }
+  tr:last-child td { border-bottom:0; }
+  .who b { display:block; } .who span { color:var(--muted); font-size:13px; }
+  .dots { display:flex; gap:4px; }
+  .dots i { width:14px; height:14px; border-radius:4px; background:#eaecf0; }
+  .dots i.ok { background:#17b26a; }
+  .frac { font-variant-numeric:tabular-nums; font-weight:600; margin-left:8px; }
+  .missing { color:var(--muted); font-size:13px; max-width:340px; }
+  .pill { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; border-radius:999px; padding:2px 9px; white-space:nowrap; }
+  .pill.ok { color:var(--ok); background:var(--ok-bg); } .pill.miss { color:var(--miss); background:var(--miss-bg); }
+  .pill.warn { color:var(--warn); background:var(--warn-bg); } .pill.info { color:var(--info); background:var(--info-bg); }
+  .muted { color:var(--muted); } .small { font-size:13px; }
+  .empty { padding:40px 16px; text-align:center; color:var(--muted); }
+  /* case view */
+  .head { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; margin-bottom:16px; }
+  .head h1 { font-size:22px; margin:0; display:flex; align-items:center; gap:8px; }
+  .head .meta { color:var(--muted); margin-top:2px; }
+  .progress { height:8px; background:#eaecf0; border-radius:99px; overflow:hidden; width:220px; margin-top:8px; }
+  .progress i { display:block; height:100%; background:#17b26a; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:16px; align-items:start; }
+  .stack { display:grid; gap:16px; }
+  .item { display:grid; grid-template-columns:28px 1fr auto; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line); }
+  .item:last-child { border-bottom:0; }
+  .ico { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-size:13px; font-weight:700; }
+  .ico.ok { background:var(--ok-bg); color:var(--ok); } .ico.miss { background:var(--miss-bg); color:var(--miss); }
+  .item .label { font-weight:600; }
+  .docs { margin:6px 0 0; padding:0; list-style:none; display:grid; gap:4px; }
+  .docs li { font-size:13px; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .docs li .t { color:var(--ink); }
+  .issue { padding:12px 16px; border-bottom:1px solid var(--line); display:grid; gap:6px; }
+  .issue:last-child { border-bottom:0; }
+  .issue .t { font-weight:600; }
+  .actions { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .actions select { padding:3px 6px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
+  .chat { padding:12px 16px; display:grid; gap:8px; max-height:420px; overflow:auto; }
+  .msg { max-width:88%; padding:8px 10px; border-radius:10px; white-space:pre-wrap; font-size:13px; }
+  .msg.in { background:var(--soft); border:1px solid var(--line); justify-self:start; }
+  .msg.out { background:#e6f4f1; justify-self:end; }
+  .msg small { display:block; color:var(--muted); font-size:11px; margin-top:4px; }
+  .log { padding:8px 16px; font-size:12px; color:var(--muted); }
+  .log div { padding:3px 0; }
+  details > summary { cursor:pointer; padding:12px 16px; font-weight:600; list-style:none; }
+  details > summary::-webkit-details-marker { display:none; }
+  details[open] > summary { border-bottom:1px solid var(--line); }
+  .spin { display:inline-block; width:10px; height:10px; border:2px solid #98a2b3; border-top-color:transparent; border-radius:50%; animation:s 0.8s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .toast { position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:8px 14px; border-radius:8px; font-size:13px; opacity:0; transition:opacity .2s; pointer-events:none; }
+  .toast.show { opacity:1; }
+  @media (max-width:860px) {
+    .grid { grid-template-columns:1fr; }
+    .hide-sm { display:none; }
+    td, th { padding:10px 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <a href="#/" class="brand">Claim Docs</a>
+    <span class="live" id="live"><i></i><span>Connecting…</span></span>
+    <span class="grow"></span>
+    <span class="muted small" id="me"></span>
+    <form method="post" action="/logout"><button class="btn sm">Sign out</button></form>
+  </div>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+const $app = document.getElementById('app');
+let TYPES = {}, CAN_PUSH = false, current = null, searchText = '';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const when = (iso) => {
+  if (!iso) return '';
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 45) return 'just now';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  if (s < 86400) return Math.round(s / 3600) + ' h ago';
+  return new Date(iso).toLocaleDateString(undefined, { day:'numeric', month:'short' });
+};
+const full = (iso) => iso ? new Date(iso).toLocaleString() : '';
+const toast = (t) => { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2200); };
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { ...opts, headers: { 'content-type': 'application/json' } });
+  if (r.status === 401) { location.href = '/login'; throw new Error('logged out'); }
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.statusText);
+  return r.json();
+}
+
+const STATUS = {
+  unreadable:    ['warn', 'Blurry / unreadable'],
+  wrong_patient: ['warn', 'Possibly another person'],
+  duplicate:     ['info', 'Duplicate'],
+  other:         ['info', 'Not a required document'],
+  rejected:      ['info', 'Rejected by agent'],
+};
+
+// ---------------- list ----------------
+async function renderList() {
+  current = null;
+  const cases = await api('/api/cases');
+  const done = cases.filter((c) => c.checklist.every((x) => x.received)).length;
+  const attn = cases.filter((c) => c.attention).length;
+  const q = searchText.toLowerCase();
+  const rows = cases.filter((c) => !q || [c.name, c.profile_name, c.phone].join(' ').toLowerCase().includes(q));
+  $app.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${cases.length}</b><span>Cases</span></div>
+      <div class="stat"><b>${done}</b><span>All 8 documents in</span></div>
+      <div class="stat"><b>${cases.length - done}</b><span>Waiting on documents</span></div>
+      <div class="stat"><b style="color:${attn ? 'var(--warn)' : 'inherit'}">${attn}</b><span>Need agent attention</span></div>
+    </div>
+    <div class="tools"><input id="q" placeholder="Search name or phone" value="${esc(searchText)}" aria-label="Search cases"></div>
+    <div class="card">
+      ${rows.length ? `<table>
+        <thead><tr><th>Patient</th><th>Checklist</th><th class="hide-sm">Missing</th><th>Status</th><th class="hide-sm">Last activity</th></tr></thead>
+        <tbody>${rows.map(row).join('')}</tbody></table>`
+      : `<div class="empty">${cases.length ? 'No case matches your search.' : 'No cases yet. Documents sent to the WhatsApp number will show up here instantly.'}</div>`}
+    </div>`;
+  const qi = document.getElementById('q');
+  qi.oninput = () => { searchText = qi.value; renderList().then(() => { const n = document.getElementById('q'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); };
+  $app.querySelectorAll('tr.row').forEach((tr) => tr.onclick = () => location.hash = '#/case/' + tr.dataset.id);
+}
+
+function row(c) {
+  const got = c.checklist.filter((x) => x.received).length;
+  const missing = c.checklist.filter((x) => !x.received).map((x) => x.label);
+  const status = c.processing ? `<span class="pill info"><span class="spin"></span> Reading ${c.processing}</span>`
+    : c.attention ? `<span class="pill warn">⚠ ${c.attention} to review</span>`
+    : got === 8 ? `<span class="pill ok">✓ Complete</span>` : `<span class="pill miss">${8 - got} missing</span>`;
+  return `<tr class="row" data-id="${c.id}" tabindex="0">
+    <td class="who"><b>${esc(c.name || c.profile_name || 'Unknown patient')}</b><span>${esc(c.phone)}</span></td>
+    <td><div style="display:flex;align-items:center"><div class="dots">${c.checklist.map((x) => `<i class="${x.received ? 'ok' : ''}" title="${esc(x.label)}: ${x.received ? 'received' : 'missing'}"></i>`).join('')}</div><span class="frac">${got}/8</span></div></td>
+    <td class="missing hide-sm">${missing.length ? esc(missing.join(', ')) : '—'}</td>
+    <td>${status}</td>
+    <td class="muted hide-sm" title="${esc(full(c.updated_at))}">${when(c.updated_at)}</td>
+  </tr>`;
+}
+
+// ---------------- case ----------------
+async function renderCase(id) {
+  current = id;
+  const c = await api('/api/cases/' + id);
+  const p = c.patient;
+  const got = c.checklist.filter((x) => x.received).length;
+  const ok = c.documents.filter((d) => d.status === 'ok');
+  const issues = c.documents.filter((d) => ['unreadable', 'wrong_patient'].includes(d.status));
+  const badFiles = c.files.filter((f) => ['error', 'unsupported'].includes(f.status));
+  const busy = c.files.filter((f) => f.status === 'processing');
+  const rest = c.documents.filter((d) => ['duplicate', 'other', 'rejected'].includes(d.status));
+  const dupFiles = c.files.filter((f) => f.status === 'duplicate');
+  const typeOpts = (sel) => Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(v)}</option>`).join('');
+  const view = (fid, label = 'View') => `<a href="/api/files/${fid}" target="_blank" rel="noopener">${label}</a>`;
+
+  $app.innerHTML = `
+    <p><a href="#/">← All cases</a></p>
+    <div class="head">
+      <div class="grow">
+        <h1>${esc(p.name || p.profile_name || 'Unknown patient')}
+          <button class="btn sm" id="rename" title="Edit patient name">Edit name</button></h1>
+        <div class="meta">${esc(p.phone)}${p.profile_name ? ` · WhatsApp name: ${esc(p.profile_name)}` : ''}${p.policyholder ? ` · Policyholder: ${esc(p.policyholder)}` : ''}</div>
+        <div class="progress" aria-label="${got} of 8 received"><i style="width:${got / 8 * 100}%"></i></div>
+        <div class="small muted" style="margin-top:4px">${got} of 8 documents received${busy.length ? ` · <span class="spin"></span> reading ${busy.length} file${busy.length > 1 ? 's' : ''}…` : ''}</div>
+      </div>
+      ${CAN_PUSH ? '<button class="btn primary" id="sendStatus">Send status on WhatsApp</button>' : ''}
+    </div>
+    <div class="grid">
+      <div class="stack">
+        <div class="card"><h2>Checklist <span class="count">${got}/8</span></h2>
+          ${c.checklist.map((x) => {
+            const docs = ok.filter((d) => d.type === x.key);
+            return `<div class="item">
+              <span class="ico ${x.received ? 'ok' : 'miss'}" aria-hidden="true">${x.received ? '✓' : '✕'}</span>
+              <div><div class="label">${esc(x.label)}</div>
+                ${docs.length ? `<ul class="docs">${docs.map((d) => `<li><span class="t">${esc(d.title)}</span>
+                  ${d.pages && d.pages !== '1' ? `<span>· p. ${esc(d.pages)}</span>` : ''}
+                  ${d.related_id ? `<span>· more pages of #${d.related_id}</span>` : ''}
+                  <span title="${esc(full(d.received_at))}">· ${when(d.received_at)}</span>
+                  ${d.reviewed_by ? `<span>· accepted by ${esc(d.reviewed_by)}</span>` : ''}
+                  · ${view(d.file_id)}</li>`).join('')}</ul>` : ''}
+              </div>
+              <span>${x.received ? '<span class="pill ok">Received</span>' : '<span class="pill miss">Missing</span>'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <details class="card" ${rest.length + dupFiles.length ? '' : 'hidden'}>
+          <summary>Duplicates & other files <span class="muted">(${rest.length + dupFiles.length})</span></summary>
+          ${rest.map((d) => `<div class="issue">
+            <div><span class="pill ${STATUS[d.status][0]}">${STATUS[d.status][1]}</span> <span class="t">${esc(d.title)}</span></div>
+            <div class="small muted">${esc(d.note || '')}${d.related_id ? ` (same as #${d.related_id})` : ''} · ${when(d.received_at)} · ${view(d.file_id)}</div>
+            <div class="actions"><select aria-label="Document type">${typeOpts(d.type)}</select>
+              <button class="btn sm" data-accept="${d.id}">Count it</button></div>
+          </div>`).join('')}
+          ${dupFiles.map((f) => `<div class="issue"><div><span class="pill info">Exact duplicate</span> <span class="t">Same file sent again</span></div>
+            <div class="small muted">Identical to file #${f.dup_of} · ${when(f.received_at)} · ${view(f.id)}</div></div>`).join('')}
+        </details>
+      </div>
+      <div class="stack">
+        <div class="card"><h2>Needs attention <span class="count">${issues.length + badFiles.length}</span></h2>
+          ${issues.length + badFiles.length ? '' : '<div class="empty" style="padding:20px">Nothing to review.</div>'}
+          ${issues.map((d) => `<div class="issue">
+            <div><span class="pill warn">${STATUS[d.status][1]}</span></div>
+            <div class="t">${esc(d.title)} <span class="muted small">(${esc(TYPES[d.type] || 'Other')})</span></div>
+            <div class="small muted">${esc(d.note || '')}${d.status === 'wrong_patient' && d.patient_name ? ` · Name on document: <b>${esc(d.patient_name)}</b>` : ''} · ${when(d.received_at)} · ${view(d.file_id)}</div>
+            <div class="actions"><select aria-label="Document type">${typeOpts(d.type)}</select>
+              <button class="btn sm" data-accept="${d.id}">Accept</button>
+              <button class="btn sm" data-reject="${d.id}">Reject</button></div>
+          </div>`).join('')}
+          ${badFiles.map((f) => `<div class="issue">
+            <div><span class="pill warn">${f.status === 'error' ? 'Could not read file' : 'Unsupported file type'}</span></div>
+            <div class="small muted">${esc(f.error || f.mime)} · ${when(f.received_at)} · ${view(f.id, 'Download')}</div>
+            ${f.status === 'error' ? `<div class="actions"><button class="btn sm" data-retry="${f.id}">Retry</button></div>` : ''}
+          </div>`).join('')}
+        </div>
+        <div class="card"><h2>WhatsApp <span class="count">${c.messages.length}</span></h2>
+          <div class="chat" id="chat">${c.messages.map((m) => `<div class="msg ${m.direction}">${esc(m.body)}<small>${m.direction === 'out' ? esc(m.status) + ' · ' : ''}${esc(full(m.created_at))}</small></div>`).join('') || '<div class="muted small">No messages yet.</div>'}</div>
+        </div>
+        <details class="card"><summary>Access log</summary>
+          <div class="log">${c.audit.map((a) => `<div>${esc(full(a.at))} · <b>${esc(a.user)}</b> ${esc(a.action.replace(/_/g, ' '))}${a.detail ? ' · ' + esc(a.detail) : ''}</div>`).join('')}</div>
+        </details>
+      </div>
+    </div>`;
+
+  const chat = document.getElementById('chat'); chat.scrollTop = chat.scrollHeight;
+  document.getElementById('rename').onclick = async () => {
+    const name = prompt('Patient name', p.name || '');
+    if (name === null) return;
+    await api('/api/cases/' + id, { method: 'PATCH', body: JSON.stringify({ name }) }); toast('Name saved');
+  };
+  if (CAN_PUSH) document.getElementById('sendStatus').onclick = async () => { await api(`/api/cases/${id}/send-status`, { method: 'POST' }); toast('Status message queued'); };
+  $app.querySelectorAll('[data-accept]').forEach((b) => b.onclick = async () => {
+    const type = b.closest('.issue').querySelector('select').value;
+    await api('/api/documents/' + b.dataset.accept, { method: 'PATCH', body: JSON.stringify({ status: 'ok', type }) }); toast('Counted as ' + TYPES[type]);
+  });
+  $app.querySelectorAll('[data-reject]').forEach((b) => b.onclick = async () => {
+    await api('/api/documents/' + b.dataset.reject, { method: 'PATCH', body: JSON.stringify({ status: 'rejected' }) }); toast('Rejected');
+  });
+  $app.querySelectorAll('[data-retry]').forEach((b) => b.onclick = async () => { await api(`/api/files/${b.dataset.retry}/reprocess`, { method: 'POST' }); toast('Reading again…'); });
+}
+
+// ---------------- routing + live updates ----------------
+function route() {
+  const m = location.hash.match(/^#\/case\/(\d+)/);
+  (m ? renderCase(m[1]) : renderList()).catch((e) => { $app.innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+}
+let t;
+function connect() {
+  const live = document.getElementById('live'), es = new EventSource('/api/events');
+  es.onopen = () => { live.classList.add('on'); live.lastChild.textContent = 'Live'; };
+  es.onerror = () => { live.classList.remove('on'); live.lastChild.textContent = 'Reconnecting…'; };
+  es.onmessage = (e) => {
+    const { id } = JSON.parse(e.data);
+    if (current && String(id) !== String(current)) return;
+    if (document.activeElement?.tagName === 'SELECT') return; // don't yank a dropdown out from under the agent
+    clearTimeout(t); t = setTimeout(route, 150);
+  };
+}
+api('/api/me').then((me) => {
+  TYPES = me.types; CAN_PUSH = me.canPush;
+  document.getElementById('me').textContent = me.user;
+  window.onhashchange = route;
+  route(); connect();
+  setInterval(() => !current && route(), 60000); // keep "x min ago" fresh
+});
+</script>
+</body>
+</html>
